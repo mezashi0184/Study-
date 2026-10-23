@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>ステップ学習</title>
+<style>
+:root{--bg:#f4f2fb;--card:#fff;--ink:#2a2742;--sub:#6a6788;--line:#e5e1f3;--brand:#6a5ae0;--brand-d:#5546c9;--brand-l:#ece9ff;--ok:#12805f;--ok-l:#e3f6ef;--warm:#9a5200;--warm-l:#fff3df;--star:#f5b400;--radius:18px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;line-height:1.65;font-size:16px}
+#app{max-width:580px;margin:0 auto;padding:16px 16px calc(48px + env(safe-area-inset-bottom))}
+h1{font-size:1.4rem;margin:.2em 0 .1em}
+h2{font-size:1.1rem;margin:0 0 .5em}
+h3{font-size:1rem;margin:1em 0 .4em}
+p{margin:.4em 0}
+small,.sub{color:var(--sub)}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(60,50,120,.08)}
+.center{text-align:center}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.btn{appearance:none;border:0;border-radius:14px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;min-height:48px;background:var(--brand-l);color:var(--brand-d);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.block{display:flex;width:100%}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--sub);font-weight:600}
+.btn.small{min-height:38px;padding:6px 12px;font-size:.9rem}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.45;cursor:default;transform:none}
+.chip{display:inline-block;background:var(--brand-l);color:var(--brand-d);border-radius:999px;padding:3px 12px;font-weight:700;font-size:.9rem}
+.chip.done{background:var(--ok-l);color:var(--ok)}
+.tag{display:inline-block;background:var(--warm-l);color:var(--warm);border-radius:999px;padding:2px 12px;font-size:.85rem;font-weight:700;margin-bottom:6px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.hero .big{font-size:2.2rem;font-weight:800;color:var(--brand-d);line-height:1.1}
+.stat{display:flex;gap:18px;margin:6px 0 12px}
+.stat div{flex:1;background:var(--brand-l);border-radius:14px;padding:8px 10px;text-align:center}
+.stat b{display:block;font-size:1.5rem;color:var(--brand-d)}
+.steps{display:flex;gap:3px;margin:8px 0 4px}
+.steps i{flex:1;height:10px;border-radius:5px;background:var(--line)}
+.steps i.on{background:var(--brand)}
+.steps i.cur{background:var(--star)}
+.star{color:var(--star)}
+.chart{display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:8px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:.78rem;color:var(--sub)}
+.col .b{width:100%;max-width:36px;background:var(--brand);border-radius:8px 8px 4px 4px;min-height:4px}
+.col.today .b{background:var(--star)}
+.col .v{min-height:1.2em}
+.timer{display:flex;align-items:center;gap:10px;margin:8px 0}
+.tbar{flex:1;height:12px;background:var(--line);border-radius:6px;overflow:hidden}
+.tbar i{display:block;height:100%;width:0;background:var(--brand);transition:width .4s}
+.qtext{font-size:1.35rem;font-weight:700;line-height:1.9;margin:4px 0 12px;word-break:break-word}
+.box{display:inline-block;min-width:1.4em;text-align:center;border:2px dashed var(--brand);border-radius:6px;color:var(--brand);margin:0 .1em;line-height:1.2}
+.fr{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .2em}
+.fr .fw{margin-right:.15em}
+.fs{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15}
+.fn{border-bottom:2px solid currentColor;padding:0 .25em}
+.fd{padding:0 .25em}
+.ansbox{min-height:64px;border:3px solid var(--brand-l);border-radius:14px;font-size:2rem;text-align:center;padding:6px;font-weight:800;background:#fff;color:var(--brand-d);letter-spacing:.05em}
+.ansbox.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.pad button{min-height:56px;font-size:1.5rem;padding:0;border-radius:14px}
+.pad .span2{grid-column:span 2}
+.pad .ok{background:var(--brand);color:#fff;font-size:1.1rem}
+.choices{display:grid;gap:10px}
+.choice{justify-content:flex-start;text-align:left;font-size:1.25rem;background:#f7f5ff;border:2px solid var(--brand-l)}
+.choice.right{background:var(--ok-l);border-color:var(--ok);color:var(--ok)}
+.choice.sel{background:var(--warm-l);border-color:#e0a050;color:var(--warm)}
+.hintrow{margin-top:6px;text-align:center}
+.fb{border-radius:14px;padding:12px 14px;margin-top:12px}
+.fb.good{background:var(--ok-l);color:var(--ok)}
+.fb.warm{background:var(--warm-l);color:var(--warm)}
+.fb-title{font-size:1.2rem;font-weight:800}
+.fb .ansline{margin:6px 0;color:var(--ink)}
+.fb .explain{background:#fff;border-radius:10px;padding:8px 12px;margin-top:6px;color:var(--ink);line-height:1.9}
+.actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.actions .btn{flex:1;min-width:140px}
+.note{background:var(--brand-l);color:var(--brand-d);border-radius:14px;padding:10px 14px;font-weight:700;margin:8px 0}
+.list{list-style:none;padding:0;margin:0}
+.list li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.list li:last-child{border:0}
+.list .cur{background:#fff8dd;border-radius:8px}
+.mini{font-size:.85rem}
+pre{background:#f7f5ff;border-radius:10px;padding:10px;overflow:auto;font-size:.8rem;line-height:1.5}
+a{color:var(--brand-d)}
+footer{text-align:center;margin-top:24px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript>このページは JavaScript をオンにすると使えます。</noscript>
+<script>
+'use strict';
+/* =====================================================================
+   ステップ学習  v1.0
+   ・1ファイル完結 / 外部ライブラリなし / 保存は localStorage
+   ・算数は乱数でプログラムが問題を作り、答えは JavaScript で計算
+   ・他教科は JSON ファイル（保護者画面から読み込み）
+   ===================================================================== */
+
+/* ---------- 小さな道具 ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeRng(seed){
+  const f = mulberry32(seed);
+  const r = (a, b) => a + Math.floor(f() * (b - a + 1));
+  r.pick = arr => arr[Math.floor(f() * arr.length)];
+  r.shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(f() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  return r;
+}
+const newSeed = () => Math.floor(Math.random() * 2147483646) + 1;
+const MINUS = '−';
+const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+const lcm = (a, b) => a / gcd(a, b) * b;
+const sum = arr => arr.reduce((x, y) => x + y, 0);
+const numStr = n => String(Math.round(n * 1e9) / 1e9);
+const sn = n => String(n).replace('-', MINUS);                       // 表示用（マイナス記号）
+const p = n => n < 0 ? `(${MINUS}${-n})` : `(+${n})`;               // 符号つきかっこ
+const pp = n => n < 0 ? `(${MINUS}${-n})` : String(n);
+const shuffleArr = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const enc = encodeURIComponent;
+function hashStr(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36);}
+
+/* ---------- 日付 ---------- */
+const pad2 = n => String(n).padStart(2, '0');
+function dayKey(d = new Date()){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function parseKey(k){ const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDays(k, n){ const d = parseKey(k); d.setDate(d.getDate() + n); return dayKey(d); }
+function dayNum(k = dayKey()){ const [y, m, d] = k.split('-').map(Number); return Math.floor(Date.UTC(y, m - 1, d) / 86400000); }
+const WD = ['日','月','火','水','木','金','土'];
+
+/* ---------- 小数・分数の表示 ---------- */
+function decStr(i, s){                       // 整数 i を 1/s した小数の文字列
+  const neg = i < 0; i = Math.abs(i);
+  const dg = String(s).length - 1;
+  if (dg === 0) return (neg ? MINUS : '') + i;
+  const str = String(i).padStart(dg + 1, '0');
+  return (neg ? MINUS : '') + str.slice(0, -dg) + '.' + str.slice(-dg);
+}
+function decTrim(i, s){ let t = decStr(i, s); if (t.includes('.')) t = t.replace(/0+$/, '').replace(/\.$/, ''); return t; }
+function frTok(n, d){                        // 約分して、1より大きければ帯分数のトークンに
+  const g = gcd(n, d); n /= g; d /= g;
+  if (d === 1) return String(n);
+  if (n > d) { const w = Math.floor(n / d), r = n % d; return `{${w} ${r}/${d}}`; }
+  return `{${n}/${d}}`;
+}
+function divisors(n){ const a = []; for (let i = 1; i <= n; i++) if (n % i === 0) a.push(i); return a; }
+
+/* ---------- 筆算の説明 ---------- */
+const PLACE = ['一','十','百','千','万'];
+function colAdd(a, b){
+  const A = String(a).split('').reverse().map(Number), B = String(b).split('').reverse().map(Number);
+  let c = 0; const out = [];
+  for (let i = 0; i < Math.max(A.length, B.length); i++){
+    const x = A[i] || 0, y = B[i] || 0, s = x + y + c;
+    out.push(`${PLACE[i]}の位：${x} + ${y}${c ? ' + ' + c : ''} = ${s}` + (s >= 10 ? `（${s % 10} を書いて、1 を上の位へ）` : ''));
+    c = s >= 10 ? 1 : 0;
+  }
+  if (c) out.push(`いちばん上に ${c} を書く`);
+  return out.join('\n');
+}
+function colSub(a, b){
+  const A = String(a).split('').reverse().map(Number), B = String(b).split('').reverse().map(Number);
+  let br = 0; const out = [];
+  for (let i = 0; i < A.length; i++){
+    let x = A[i] - br; const y = B[i] || 0; let note = '';
+    if (x < y){ x += 10; br = 1; note = '（上の位から 1 もらって 10 をたす）'; } else br = 0;
+    out.push(`${PLACE[i]}の位：${x} − ${y} = ${x - y}${note}`);
+  }
+  return out.join('\n');
+}
+function partsMul(a, b){
+  const s = String(a), terms = [];
+  for (let i = 0; i < s.length; i++){ const d = +s[i]; if (!d) continue; const pv = d * Math.pow(10, s.length - 1 - i); terms.push([pv, pv * b]); }
+  let t = terms.map(([pv, q]) => `${pv} × ${b} = ${q}`).join('\n');
+  if (terms.length > 1) t += `\n${terms.map(x => x[1]).join(' + ')} = ${a * b}`;
+  return t;
+}
+function longDiv(a, b){
+  const ds = String(a).split('').map(Number); let rem = 0, started = false; const lines = [];
+  for (const d of ds){
+    const cur = rem * 10 + d, qd = Math.floor(cur / b); rem = cur - qd * b;
+    if (qd > 0 || started){ started = true; lines.push(`${cur} ÷ ${b} = ${qd} あまり ${rem}`); }
+  }
+  return lines.join('\n');
+}
+function lin(a, b){ return `${a === 1 ? '' : a === -1 ? MINUS : a}x` + (b > 0 ? ` + ${b}` : b < 0 ? ` ${MINUS} ${-b}` : ''); }
+function explainAddSigned(a, b){
+  const aa = Math.abs(a), bb = Math.abs(b);
+  if ((a > 0) === (b > 0)) return `同じ符号どうしだから、数をたして 符号はそのまま。\n${aa} + ${bb} = ${aa + bb} → ${sn(a + b)}`;
+  if (aa === bb) return `符号がちがって 数が同じだから、答えは 0`;
+  const big = Math.max(aa, bb), small = Math.min(aa, bb);
+  const sign = (aa > bb ? a : b) > 0 ? '＋' : MINUS;
+  return `符号がちがうから、大きい方から 小さい方をひいて、大きい方の符号をつける。\n${big} − ${small} = ${big - small}、符号は ${sign} → ${sn(a + b)}`;
+}
+
+/* 分数の選択肢（正解 + 「ありがちな考え方」から作ったまぎらわしい選択肢） */
+function fracQuestion(text, N, D, cands, explain, r){
+  const eq = (a, b) => a[0] * b[1] === b[0] * a[1];
+  const ok = (n, d) => Number.isInteger(n) && Number.isInteger(d) && n > 0 && d > 0;
+  const list = [[N, D]];
+  const add = (n, d) => { if (!ok(n, d)) return; if (list.some(x => eq(x, [n, d]))) return; list.push([n, d]); };
+  cands.forEach(c => add(c[0], c[1]));
+  for (let k = 1; list.length < 4 && k < 30; k++){ add(N + k, D); add(N, D + k); add(N + k, D + k); }
+  const picked = list.slice(0, 4).map(([n, d]) => frTok(n, d));
+  return { kind: 'choice', text, answer: picked[0], choices: r.shuffle(picked), explain };
+}
+
+/* =====================================================================
+   算数（18レベル）  ※画面には学年を出さない
+   ===================================================================== */
+const MATH = [
+ { name: '九九のかくにん', gen: r => {
+   const a = r(2, 9), b = r(2, 9), ans = a * b, seq = []; for (let i = 1; i <= b; i++) seq.push(a * i);
+   return { kind: 'num', text: `${a} × ${b} = □`, answer: ans, explain: `${a} の段を じゅんに言うと ${seq.join('、')}。\n${b} 番目が ${ans} だから、${a} × ${b} = ${ans}` };
+ }},
+ { name: '3けたのたし算・ひき算', gen: r => {
+   if (r(0, 1) === 0){
+     const a = r(120, 880), b = r(101, 999 - a), ans = a + b;
+     return { kind: 'num', text: `${a} + ${b} = □`, answer: ans, explain: `くらいを そろえて、一の位から じゅんに。\n${colAdd(a, b)}\n答え：${ans}` };
+   }
+   const a = r(200, 999), b = r(101, a - 20), ans = a - b;
+   return { kind: 'num', text: `${a} ${MINUS} ${b} = □`, answer: ans, explain: `くらいを そろえて、一の位から じゅんに。\n${colSub(a, b)}\n答え：${ans}` };
+ }},
+ { name: 'かけ算（2〜3けた × 1けた）', gen: r => {
+   const a = r(0, 1) ? r(12, 99) : r(101, 999), b = r(2, 9), ans = a * b;
+   return { kind: 'num', text: `${a} × ${b} = □`, answer: ans, explain: `位ごとに分けて かけてから たすよ。\n${partsMul(a, b)}\n答え：${ans}` };
+ }},
+ { name: 'わり算（あまりなし）', gen: r => {
+   const b = r(2, 9), q = r(12, 199), a = b * q;
+   return { kind: 'num', text: `${a} ÷ ${b} = □`, answer: q, explain: `${b} × □ = ${a} になる数をさがすよ。\n筆算の流れ：\n${longDiv(a, b)}\n答え：${q}　（たしかめ：${q} × ${b} = ${a}）` };
+ }},
+ { name: 'わり算（あまりあり）', gen: r => {
+   const b = r(3, 9), q = r(10, 99), rem = r(1, b - 1), a = b * q + rem, askRem = r(0, 1) === 1;
+   return { kind: 'num', text: `${a} ÷ ${b} を、あまりのある形で 計算します。\n${askRem ? 'あまりは いくつ？' : '商（わった答え）は いくつ？'}`, answer: askRem ? rem : q,
+     explain: `${a} ÷ ${b} = ${q} あまり ${rem}\nたしかめ：${b} × ${q} + ${rem} = ${a}\n${askRem ? 'あまりは ' + rem : '商は ' + q}` };
+ }},
+ { name: 'かけ算（2けた × 2けた など）', gen: r => {
+   const a = r(0, 1) ? r(12, 99) : r(101, 399); let b = r(11, 99); if (b % 10 === 0) b++;
+   const ones = b % 10, tens = Math.floor(b / 10) * 10, ans = a * b;
+   return { kind: 'num', text: `${a} × ${b} = □`, answer: ans, explain: `${b} を ${tens} と ${ones} に分けて かけるよ。\n${a} × ${ones} = ${a * ones}\n${a} × ${tens} = ${a * tens}\n${a * ones} + ${a * tens} = ${ans}\n答え：${ans}` };
+ }},
+ { name: '小数のたし算・ひき算', dec: true, gen: r => {
+   const s = r(0, 1) ? 10 : 100, unit = s === 10 ? '0.1' : '0.01';
+   const mk = () => { let v = s === 10 ? r(12, 199) : r(101, 999); if (v % 10 === 0) v++; return v; };
+   let ai = mk(), bi = mk();
+   if (r(0, 1) === 0){
+     const t = ai + bi;
+     return { kind: 'num', text: `${decStr(ai, s)} + ${decStr(bi, s)} = □`, answer: t / s, explain: `小数点の位置を そろえて 計算するよ。\n${unit} が ${ai} こ と ${bi} こ → ${ai} + ${bi} = ${t} こ\n${unit} が ${t} こ で ${decTrim(t, s)}` };
+   }
+   while (ai === bi) bi = mk(); if (ai < bi) [ai, bi] = [bi, ai];
+   const t = ai - bi;
+   return { kind: 'num', text: `${decStr(ai, s)} ${MINUS} ${decStr(bi, s)} = □`, answer: t / s, explain: `小数点の位置を そろえて 計算するよ。\n${unit} が ${ai} こ から ${bi} こ ひく → ${ai} − ${bi} = ${t} こ\n${unit} が ${t} こ で ${decTrim(t, s)}` };
+ }},
+ { name: '分数のたし算・ひき算（分母が同じ）', gen: r => {
+   const d = r(4, 12);
+   if (r(0, 1) === 0){
+     const n1 = r(1, d - 1), n2 = r(1, d - 1), t = n1 + n2, w = Math.floor(t / d), rr = t % d;
+     return { kind: 'num', text: `{${n1}/${d}} + {${n2}/${d}} = {□/${d}}`, answer: t, explain: `分母が同じときは、分子だけを たすよ。\n${n1} + ${n2} = ${t}\nだから {${t}/${d}}` + (t > d && rr ? `（帯分数なら {${w} ${rr}/${d}}）` : '') };
+   }
+   let n1 = r(2, d - 1), n2 = r(1, n1 - 1);
+   return { kind: 'num', text: `{${n1}/${d}} ${MINUS} {${n2}/${d}} = {□/${d}}`, answer: n1 - n2, explain: `分母が同じときは、分子だけを ひくよ。\n${n1} − ${n2} = ${n1 - n2}\nだから {${n1 - n2}/${d}}` };
+ }},
+ { name: '小数のかけ算', dec: true, gen: r => {
+   if (r(0, 1) === 0){
+     let ai = r(12, 99); if (ai % 10 === 0) ai++; const b = r(2, 9), t = ai * b;
+     return { kind: 'num', text: `${decStr(ai, 10)} × ${b} = □`, answer: t / 10, explain: `小数点は ないものと思って かけるよ。\n${ai} × ${b} = ${t}\n小数点以下は 1けただから ${decTrim(t, 10)}` };
+   }
+   let ai = r(11, 59); if (ai % 10 === 0) ai++; const bi = r(2, 9), t = ai * bi;
+   return { kind: 'num', text: `${decStr(ai, 10)} × ${decStr(bi, 10)} = □`, answer: t / 100, explain: `小数点は ないものと思って かけるよ。\n${ai} × ${bi} = ${t}\n小数点以下は 1 + 1 = 2けただから ${decTrim(t, 100)}` };
+ }},
+ { name: '小数のわり算', dec: true, gen: r => {
+   if (r(0, 1) === 0){
+     let qi = r(12, 99); if (qi % 10 === 0) qi++; const b = r(2, 9), ai = qi * b;
+     return { kind: 'num', text: `${decStr(ai, 10)} ÷ ${b} = □`, answer: qi / 10, explain: `0.1 が ${ai} こ を ${b} つに分けると…\n${ai} ÷ ${b} = ${qi}\n0.1 が ${qi} こ で ${decTrim(qi, 10)}` };
+   }
+   const bi = r(2, 9), q = r(2, 15), ai = q * bi;
+   return { kind: 'num', text: `${decStr(ai, 10)} ÷ ${decStr(bi, 10)} = □`, answer: q, explain: `わる数を 整数にするために、両方を 10倍するよ。\n${ai} ÷ ${bi} = ${q}\n答え：${q}` };
+ }},
+ { name: '約数と倍数', gen: r => {
+   if (r(0, 1) === 0){
+     const g = r(2, 12); let a, b;
+     for (;;){ const x = r(2, 9), y = r(2, 9); if (x !== y && gcd(x, y) === 1){ a = g * x; b = g * y; break; } }
+     return { kind: 'num', text: `${a} と ${b} の 最大公約数は いくつ？`, answer: g, explain: `${a} の約数：${divisors(a).join('、')}\n${b} の約数：${divisors(b).join('、')}\nどちらにも ある数のうち いちばん大きいのは ${g}` };
+   }
+   let a, b; for (;;){ a = r(2, 12); b = r(2, 12); if (a !== b) break; }
+   const L = lcm(a, b), ma = [], mb = []; for (let i = a; i <= L; i += a) ma.push(i); for (let i = b; i <= L; i += b) mb.push(i);
+   return { kind: 'num', text: `${a} と ${b} の 最小公倍数は いくつ？`, answer: L, explain: `${a} の倍数：${ma.join('、')}\n${b} の倍数：${mb.join('、')}\nどちらにも ある数のうち いちばん小さいのは ${L}` };
+ }},
+ { name: '分数のたし算・ひき算（分母がちがう）', gen: r => {
+   let d1, d2, n1, n2, sub;
+   for (;;){
+     d1 = r(2, 9); d2 = r(2, 9); if (d1 === d2) continue;
+     n1 = r(1, d1 - 1); n2 = r(1, d2 - 1); sub = r(0, 1) === 1;
+     if (sub){ if (n1 * d2 < n2 * d1){ [n1, n2] = [n2, n1]; [d1, d2] = [d2, d1]; } if (n1 * d2 === n2 * d1) continue; }
+     break;
+   }
+   const L = lcm(d1, d2), a = n1 * (L / d1), b = n2 * (L / d2), N = sub ? a - b : a + b, op = sub ? MINUS : '+';
+   const cands = [[sub ? n1 - n2 : n1 + n2, sub ? d1 - d2 : d1 + d2], [sub ? n1 - n2 : n1 + n2, L], [N, d1 * d2]];
+   return fracQuestion(`{${n1}/${d1}} ${op} {${n2}/${d2}} = □\n（答えは 約分して、1より大きいときは 帯分数で）`, N, L, cands,
+     `分母がちがうときは、分母を そろえる（通分）よ。\n${d1} と ${d2} の最小公倍数は ${L}\n{${n1}/${d1}} = {${a}/${L}}、{${n2}/${d2}} = {${b}/${L}}\n{${a}/${L}} ${op} {${b}/${L}} = {${N}/${L}}\n答え：${frTok(N, L)}`, r);
+ }},
+ { name: '平均と割合', gen: r => {
+   const t = r(0, 2);
+   if (t === 0){
+     for (;;){
+       const cnt = r(3, 5), m = r(45, 95), nums = []; let s = 0;
+       for (let i = 0; i < cnt - 1; i++){ const v = m + r(-20, 20); nums.push(v); s += v; }
+       const last = m * cnt - s; if (last < 20 || last > 110) continue; nums.push(last);
+       const sh = r.shuffle(nums);
+       return { kind: 'num', text: `${sh.join('、')} の 平均は いくつ？`, answer: m, explain: `平均 ＝ 合計 ÷ 個数\n合計：${sh.join(' + ')} = ${s + last}\n${s + last} ÷ ${cnt} = ${m}` };
+     }
+   }
+   if (t === 1){
+     const bases = [40, 50, 60, 80, 100, 120, 150, 200, 250, 300, 400, 500], ps = [10, 20, 25, 30, 40, 50, 60, 75, 80];
+     for (;;){
+       const base = r.pick(bases), pc = r.pick(ps); if ((base * pc) % 100) continue;
+       const ans = base * pc / 100;
+       return { kind: 'num', text: `${base} の ${pc}% は いくつ？`, answer: ans, explain: `${pc}% は ${numStr(pc / 100)} のことだよ。\n${base} × ${numStr(pc / 100)} = ${ans}` };
+     }
+   }
+   const bs = [20, 25, 40, 50, 80, 200, 250, 400, 500], ps = [10, 20, 25, 30, 40, 50, 60, 70, 75, 80];
+   for (;;){
+     const b = r.pick(bs), pc = r.pick(ps); if ((b * pc) % 100) continue;
+     const a = b * pc / 100;
+     return { kind: 'num', text: `${a} は ${b} の 何% ？（数字だけ 入れてね）`, answer: pc, explain: `${a} ÷ ${b} = ${numStr(a / b)}\n100倍すると ${pc}%` };
+   }
+ }},
+ { name: '分数のかけ算・わり算', gen: r => {
+   let d1, d2, n1, n2;
+   for (;;){ d1 = r(2, 9); d2 = r(2, 9); n1 = r(1, d1 - 1); n2 = r(1, d2 - 1); if (!(n1 === n2 && d1 === d2)) break; }
+   const div = r(0, 1) === 1;
+   const N = div ? n1 * d2 : n1 * n2, D = div ? d1 * n2 : d1 * d2;
+   const cands = div ? [[n1 * n2, d1 * d2], [d1 * n2, n1 * d2], [n1 * d2, d1 + n2]] : [[n1 * d2, d1 * n2], [n1 + n2, d1 * d2], [n1 * n2, d1 + d2]];
+   const ex = div
+     ? `わる数の 分母と分子を ひっくり返して、かけ算にするよ。\n{${n1}/${d1}} ÷ {${n2}/${d2}} = {${n1}/${d1}} × {${d2}/${n2}} = {${N}/${D}}\n答え：${frTok(N, D)}`
+     : `分子どうし、分母どうしを かけるよ。\n{${n1}/${d1}} × {${n2}/${d2}} = {${N}/${D}}\n答え：${frTok(N, D)}`;
+   return fracQuestion(`{${n1}/${d1}} ${div ? '÷' : '×'} {${n2}/${d2}} = □\n（答えは 約分して、1より大きいときは 帯分数で）`, N, D, cands, ex, r);
+ }},
+ { name: '正負の数のたし算・ひき算', neg: true, gen: r => {
+   const nz = () => { let v = 0; while (!v) v = r(-15, 15); return v; };
+   const a = nz(), b = nz();
+   if (r(0, 1) === 0) return { kind: 'num', text: `${p(a)} + ${p(b)} = □`, answer: a + b, explain: explainAddSigned(a, b) };
+   return { kind: 'num', text: `${p(a)} ${MINUS} ${p(b)} = □`, answer: a - b, explain: `ひき算は、ひく数の符号を 反対にして たし算に直せるよ。\n${p(a)} ${MINUS} ${p(b)} = ${p(a)} + ${p(-b)}\n${explainAddSigned(a, -b)}` };
+ }},
+ { name: '正負の数のかけ算・わり算', neg: true, gen: r => {
+   const nz = () => { let v = 0; while (!v) v = r(-9, 9); return v; };
+   const a = nz(), b = nz(), same = (a > 0) === (b > 0), sg = same ? '同じ符号どうし → 答えは ＋' : '符号がちがう → 答えは −';
+   if (r(0, 1) === 0){
+     return { kind: 'num', text: `${p(a)} × ${p(b)} = □`, answer: a * b, explain: `符号：${sg}\n数：${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(a * b)}\n答え：${sn(a * b)}` };
+   }
+   const q = nz(), dv = nz(), aa = q * dv, same2 = (aa > 0) === (dv > 0), sg2 = same2 ? '同じ符号どうし → 答えは ＋' : '符号がちがう → 答えは −';
+   return { kind: 'num', text: `${p(aa)} ÷ ${p(dv)} = □`, answer: q, explain: `符号：${sg2}\n数：${Math.abs(aa)} ÷ ${Math.abs(dv)} = ${Math.abs(q)}\n答え：${sn(q)}` };
+ }},
+ { name: '文字式の値', neg: true, gen: r => {
+   const nzr = (lo, hi) => { let v = 0; while (!v) v = r(lo, hi); return v; };
+   if (r(0, 1) === 0){
+     const a = r(2, 9), b = nzr(-9, 9), k = nzr(-5, 8), ans = a * k + b;
+     return { kind: 'num', text: `x = ${sn(k)} のとき、${lin(a, b)} の値は いくつ？`, answer: ans,
+       explain: `x に ${k} を入れるよ。\n${a} × ${pp(k)} ${b > 0 ? '+' : MINUS} ${Math.abs(b)}\n= ${sn(a * k)} ${b > 0 ? '+' : MINUS} ${Math.abs(b)}\n= ${sn(ans)}` };
+   }
+   const a = r(2, 6), c = nzr(-6, 6), k = nzr(-4, 5), m = nzr(-4, 5), ans = a * k + c * m;
+   const expr = `${a}x ${c > 0 ? '+' : MINUS} ${Math.abs(c)}y`;
+   return { kind: 'num', text: `x = ${sn(k)}、y = ${sn(m)} のとき、${expr} の値は いくつ？`, answer: ans,
+     explain: `x と y に 数を入れるよ。\n${a} × ${pp(k)} ${c > 0 ? '+' : MINUS} ${Math.abs(c)} × ${pp(m)}\n= ${sn(a * k)} ${(c * m) >= 0 ? '+' : MINUS} ${Math.abs(c * m)}\n= ${sn(ans)}` };
+ }},
+ { name: '一次方程式', neg: true, gen: r => {
+   const nzr = (lo, hi) => { let v = 0; while (!v) v = r(lo, hi); return v; };
+   const a = r(2, 9), b = nzr(-15, 15), x = nzr(-9, 12), c = a * x + b;
+   return { kind: 'num', text: `次の方程式を解いて、x の値を もとめよう。\n${lin(a, b)} = ${sn(c)}\nx = □`, answer: x,
+     explain: `${Math.abs(b)} を 右へ 移すよ（符号が 反対になる）。\n${a}x = ${sn(c)} ${b > 0 ? MINUS : '+'} ${Math.abs(b)} = ${sn(c - b)}\n両辺を ${a} でわる。\nx = ${sn(c - b)} ÷ ${a} = ${sn(x)}` };
+ }}
+];
+
+/* =====================================================================
+   状態（localStorage）
+   ===================================================================== */
+const KEY = 'stepstudy.v1';
+const store = (() => { try { const k = '__t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch (e) { return null; } })();
+const freshState = () => ({ v: 1, subjects: {}, reviews: [], log: {}, streak: { count: 0, last: null, total: 0 }, bank: {}, today: null, check: null, settings: { minutes: 15 } });
+function loadState(){
+  if (store){ try { const s = store.getItem(KEY); if (s){ const o = JSON.parse(s); if (o && o.v === 1) return Object.assign(freshState(), o); } } catch (e) {} }
+  return freshState();
+}
+let state = loadState();
+function save(){ if (!store) return; try { store.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const REV = [1, 3, 7, 14];                      // 復習の間隔（最初に出会った日から数えた日数）
+const SUBJECT_ORDER = ['算数', '国語', '英語', '理科', '社会'];
+
+function availableSubjects(){
+  const set = ['算数'];
+  Object.keys(state.bank).forEach(s => { if (state.bank[s] && state.bank[s].length && !set.includes(s)) set.push(s); });
+  return set.sort((a, b) => { const ia = SUBJECT_ORDER.indexOf(a), ib = SUBJECT_ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, 'ja'); });
+}
+function ladder(s){
+  if (s === '算数') return MATH.map((_, i) => i + 1);
+  return [...new Set((state.bank[s] || []).map(q => q.level))].sort((a, b) => a - b);
+}
+function levelName(s, lv){ return s === '算数' ? MATH[lv - 1].name : `レベル ${lv}`; }
+function idxOf(l, v){ let i = 0; for (let k = 0; k < l.length; k++) if (l[k] <= v) i = k; return i; }
+function sp(s){
+  if (!state.subjects[s]){ const l = ladder(s); state.subjects[s] = { placed: false, level: l[0] || 1, max: l[0] || 1, clear: false }; }
+  return state.subjects[s];
+}
+function clearedCount(s){ const pr = sp(s), l = ladder(s); return pr.clear ? l.length : Math.max(0, idxOf(l, pr.max)); }
+
+function dayLog(k = dayKey()){ return state.log[k] || (state.log[k] = { ms: 0, answered: 0 }); }
+function touchStreak(){
+  const k = dayKey(), s = state.streak; if (s.last === k) return;
+  s.count = (s.last === addDays(k, -1)) ? s.count + 1 : 1; s.last = k; s.total++;
+}
+function currentStreak(){ const k = dayKey(), s = state.streak; if (!s.last) return 0; return (s.last === k || s.last === addDays(k, -1)) ? s.count : 0; }
+function noteAnswer(){ const d = dayLog(); d.answered++; if (d.answered >= 5) touchStreak(); }
+
+function ensureToday(){
+  const k = dayKey();
+  if (!state.today || state.today.date !== k){
+    const av = availableSubjects(), n = av.length, d = dayNum(), plan = [];
+    for (let i = 0; i < Math.min(2, n); i++) plan.push(av[(d * 2 + i) % n]);
+    state.today = { date: k, plan, done: [], spent: {} }; save();
+  }
+  return state.today;
+}
+
+/* =====================================================================
+   問題の組み立て
+   ===================================================================== */
+function buildMath(level, seed){
+  const def = MATH[level - 1], q = def.gen(makeRng(seed));
+  q.level = level; q.neg = !!def.neg; q.dec = !!def.dec; q.ref = { subj: '算数', level, seed };
+  return q;
+}
+function bankToQ(b){
+  const isChoice = !!b.choices;
+  return { kind: isChoice ? 'choice' : 'num', text: b.text, answer: b.answer, choices: b.choices || null, explain: b.explain || '', level: b.level,
+           neg: true, dec: true, ref: { subj: b.subj, level: b.level, qid: b.id } };
+}
+function buildQ(subj, level, seed, avoid){
+  if (subj === '算数') return buildMath(level, seed);
+  let pool = (state.bank[subj] || []).filter(x => x.level === level);
+  if (avoid && pool.length > 2) pool = pool.filter(x => !avoid.includes(x.id));
+  return bankToQ(pick(pool));
+}
+
+/* ---------- 復習キュー ---------- */
+function addReview(q){
+  const today = dayKey(), ref = q.ref;
+  if (ref.qid){
+    const ex = state.reviews.find(r => r.subj === ref.subj && r.qid === ref.qid);
+    if (ex){ ex.stage = 0; ex.miss = today; ex.due = addDays(today, 1); return; }
+  }
+  state.reviews.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), subj: ref.subj, level: ref.level, seed: ref.seed || null, qid: ref.qid || null, stage: 0, miss: today, due: addDays(today, REV[0]) });
+}
+function reviewResult(it, correct){
+  const today = dayKey();
+  if (correct){
+    it.stage++;
+    if (it.stage >= REV.length){ state.reviews = state.reviews.filter(r => r.id !== it.id); return; }
+    const want = addDays(it.miss, REV[it.stage]), tomorrow = addDays(today, 1);
+    it.due = want > tomorrow ? want : tomorrow;
+  } else { it.stage = 0; it.miss = today; it.due = addDays(today, 1); }
+}
+function dueReviews(subj){ const t = dayKey(); return state.reviews.filter(r => r.subj === subj && r.due <= t).sort((a, b) => a.due < b.due ? -1 : 1); }
+function buildFromReview(it){
+  if (it.subj === '算数') return buildMath(it.level, (it.stage === 0 && it.seed) ? it.seed : newSeed());
+  const b = (state.bank[it.subj] || []).find(x => x.id === it.qid);
+  return b ? bankToQ(b) : null;
+}
+
+/* =====================================================================
+   表示用の整形 / 問題カード
+   ===================================================================== */
+function fmt(t){
+  let s = esc(String(t));
+  s = s.replace(/\{(?:(-?\d+)\s+)?(-?\d+|□)\/(\d+)\}/g, (m, w, n, d) => `<span class="fr">${w ? `<span class="fw">${w}</span>` : ''}<span class="fs"><span class="fn">${n}</span><span class="fd">${d}</span></span></span>`);
+  s = s.replace(/□/g, '<span class="box">□</span>');
+  return s.replace(/\n/g, '<br>');
+}
+const PRAISE = ['せいかい！', 'ナイス！', 'いいね！', 'その調子！', 'ばっちり！', 'すごい！', 'さすが！', 'ピッタリ！'];
+const GENTLE = ['答えあわせを見られたこと、ちゃんと力になるよ', 'この1問で、また1つ 身についたよ', 'あと少し。考え方を見て 次につなげよう'];
+
+let keyHandler = null, curQ = null;
+function offKey(){ if (keyHandler){ document.removeEventListener('keydown', keyHandler); keyHandler = null; } }
+
+function padHTML(q){
+  const K = (k, label, extra = '', dis = false) => `<button type="button" class="btn ${extra}" data-k="${k}" ${dis ? 'disabled' : ''}>${label}</button>`;
+  return [K('7','7'),K('8','8'),K('9','9'),K('bs','⌫'),K('4','4'),K('5','5'),K('6','6'),K('neg',MINUS,'',!q.neg),
+          K('1','1'),K('2','2'),K('3','3'),K('dot','.','',!q.dec),K('0','0','span2'),K('ok','こたえる','span2 ok')].join('');
+}
+
+/* o: { tag, onAnswer(correct,hinted), onNext(), canRetry, onRetry(), praise() } */
+function mountQuestion(host, q, o){
+  offKey(); curQ = q;
+  let input = '', done = false;
+  const choices = q.kind === 'choice' ? shuffleArr(q.choices) : null;
+  host.innerHTML = `
+    ${o.tag ? `<div class="tag">${esc(o.tag)}</div>` : ''}
+    <div class="qtext">${fmt(q.text)}</div>
+    ${choices
+      ? `<div class="choices">${choices.map((c, i) => `<button type="button" class="btn choice" data-i="${i}">${fmt(c)}</button>`).join('')}</div>`
+      : `<div class="ansbox" id="ansbox" aria-live="polite">&nbsp;</div><div class="pad">${padHTML(q)}</div>`}
+    <div class="hintrow"><button type="button" class="btn ghost small" id="hintBtn">ヒントを見る</button></div>
+    <div id="fb"></div>`;
+  const ansbox = $('#ansbox', host);
+  const show = () => { ansbox.innerHTML = input ? esc(input.replace('-', MINUS)) : '&nbsp;'; };
+
+  function finish(correct, hinted, chosen){
+    if (done) return; done = true;
+    host.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    $('#hintBtn', host).style.display = 'none';
+    if (choices) host.querySelectorAll('.choice').forEach((b, i) => {
+      if (choices[i] === q.answer) b.classList.add('right'); else if (i === chosen) b.classList.add('sel');
+    });
+    o.onAnswer(correct, hinted);
+    const ansHTML = choices ? fmt(q.answer) : esc(sn(numStr(Number(q.answer))));
+    const explain = q.explain ? `<div class="explain">${fmt(q.explain)}</div>` : '';
+    const fb = $('#fb', host);
+    if (correct){
+      fb.innerHTML = `<div class="fb good"><div class="fb-title">${esc(o.praise ? o.praise() : pick(PRAISE))}</div></div>`;
+    } else {
+      fb.innerHTML = `<div class="fb warm"><div class="fb-title">${hinted ? 'ヒントだよ' : 'あと少し！'}</div><div>${esc(pick(GENTLE))}</div>
+        <div class="ansline">正しい答えは <b>${ansHTML}</b></div>${explain}</div>`;
+    }
+    const retry = !correct && o.canRetry;
+    fb.insertAdjacentHTML('beforeend', `<div class="actions">${retry ? '<button type="button" class="btn" id="retryBtn">もう一回やってみよう</button>' : ''}<button type="button" class="btn primary" id="nextBtn">つぎへ</button></div>`);
+    $('#nextBtn', host).onclick = () => o.onNext();
+    if (retry) $('#retryBtn', host).onclick = () => o.onRetry();
+    if (fb.scrollIntoView) { try { fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {} }
+  }
+  function submit(){
+    if (!input || input === '-' || input.endsWith('.')){ ansbox.classList.remove('shake'); void ansbox.offsetWidth; ansbox.classList.add('shake'); return; }
+    finish(Math.abs(Number(input) - Number(q.answer)) < 1e-9, false);
+  }
+  function press(k){
+    if (/^\d$/.test(k)){ if (input === '0') input = k; else if (input === '-0') input = '-' + k; else if (input.length < 9) input += k; }
+    else if (k === 'bs') input = input.slice(0, -1);
+    else if (k === 'neg' && q.neg) input = input.startsWith('-') ? input.slice(1) : '-' + input;
+    else if (k === 'dot' && q.dec){ if (!input.includes('.')) input += (input === '' || input === '-') ? '0.' : '.'; }
+    else if (k === 'ok') return submit();
+    show();
+  }
+  host.onclick = e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.id === 'hintBtn') return finish(false, true);
+    if (b.dataset.i !== undefined){ const i = +b.dataset.i; return finish(choices[i] === q.answer, false, i); }
+    if (b.dataset.k) press(b.dataset.k);
+  };
+  keyHandler = e => {
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (done){ if (e.key === 'Enter'){ e.preventDefault(); const nb = $('#nextBtn', host); if (nb) nb.click(); } return; }
+    if (choices){ const n = parseInt(e.key, 10); if (n >= 1 && n <= choices.length) finish(choices[n - 1] === q.answer, false, n - 1); return; }
+    if (/^\d$/.test(e.key)) press(e.key);
+    else if (e.key === 'Backspace') press('bs');
+    else if (e.key === '.') press('dot');
+    else if (e.key === '-' || e.key === MINUS) press('neg');
+    else if (e.key === 'Enter'){ e.preventDefault(); submit(); }
+  };
+  document.addEventListener('keydown', keyHandler);
+}
+
+/* =====================================================================
+   画面：共通
+   ===================================================================== */
+const app = $('#app');
+let sess = null;
+function cleanup(){
+  offKey();
+  if (sess && !sess.ended){ commitTime(); clearInterval(sess.timer); sess.ended = true; save(); }
+}
+function go(h){ if (location.hash === '#' + h) route(); else location.hash = h; }
+
+function stepsBar(s){
+  const l = ladder(s), pr = sp(s), cur = idxOf(l, pr.max), clr = clearedCount(s);
+  return `<div class="steps" aria-label="ステップの進み具合">${l.map((_, i) => `<i class="${i < clr ? 'on' : (i === cur && !pr.clear ? 'cur' : '')}"></i>`).join('')}</div>`;
+}
+function weekChart(){
+  const today = dayKey(); let cols = '';
+  for (let i = 6; i >= 0; i--){
+    const k = addDays(today, -i), ms = (state.log[k] || {}).ms || 0, mins = Math.round(ms / 60000), h = Math.min(100, Math.round(mins / 30 * 100));
+    cols += `<div class="col ${i === 0 ? 'today' : ''}"><div class="v">${mins ? mins + '分' : ''}</div><div class="b" style="height:${Math.max(4, h * .8)}%"></div><div>${WD[parseKey(k).getDay()]}</div></div>`;
+  }
+  return `<div class="chart" aria-label="この1週間の学習時間">${cols}</div>`;
+}
+function weekMinutes(){ const t = dayKey(); let s = 0; for (let i = 0; i < 7; i++) s += ((state.log[addDays(t, -i)] || {}).ms || 0); return Math.round(s / 60000); }
+
+/* =====================================================================
+   画面：ホーム
+   ===================================================================== */
+function renderHome(){
+  const t = ensureToday(), av = availableSubjects(), streak = currentStreak();
+  const hr = new Date().getHours(), greet = hr < 11 ? 'おはよう' : hr < 18 ? 'こんにちは' : 'こんばんは';
+  const next = t.plan.find(s => !t.done.includes(s));
+  let hero;
+  if (!next) hero = `<button class="btn block" disabled>今日の1ステップは ぜんぶ終わったよ ★</button>`;
+  else if (!sp(next).placed) hero = `<button class="btn primary block" id="heroBtn">まずは レベルチェック（${esc(next)}）</button><p class="sub mini">いまの自分に ちょうどいい スタート地点を さがすよ。</p>`;
+  else hero = `<button class="btn primary block" id="heroBtn">${(t.spent[next] || 0) > 0 ? 'つづきから' : '今日の1ステップを はじめる'}（${esc(next)}）</button>`;
+  const planChips = t.plan.map((s, i) => `<span class="chip ${t.done.includes(s) ? 'done' : ''}">${i + 1}. ${esc(s)}${t.done.includes(s) ? ' ✓' : ''}</span>`).join(' ');
+  const dueAll = state.reviews.filter(r => r.due <= dayKey()).length;
+  const subjCards = av.map(s => {
+    const pr = sp(s), clr = clearedCount(s), l = ladder(s);
+    return `<div class="card"><div class="row between"><h2 style="margin:0">${esc(s)}</h2><span class="star">★ ${clr}</span></div>
+      ${pr.placed ? `<p class="mini sub">いま練習中：レベル ${idxOf(l, pr.level) + 1}　${esc(levelName(s, pr.level))}</p>${stepsBar(s)}` : `<p class="mini sub">まだ レベルチェックをしていないよ</p>`}
+      <div class="row" style="margin-top:8px"><button class="btn small" data-check="${esc(s)}">${pr.placed ? 'もう一度 レベルチェック' : 'レベルチェックをする'}</button></div></div>`;
+  }).join('');
+  app.innerHTML = `
+    <h1>${greet}！</h1><p class="sub" style="margin-top:0">きょうも 1ステップずつ いこう。</p>
+    <div class="card hero">
+      <div class="stat"><div><b>${streak}</b>れんぞく 日</div><div><b>${state.streak.total}</b>ぜんぶで 日</div><div><b>${weekMinutes()}</b>今週の 分</div></div>
+      <div style="margin:4px 0 10px">今日の1ステップ：${planChips}</div>
+      ${hero}
+    </div>
+    ${dueAll ? `<div class="note">ふくしゅうの 問題が ${dueAll} こ 待っているよ。今日の1ステップの はじめに 出てくるよ。</div>` : ''}
+    ${subjCards}
+    <div class="card"><h2>この1週間</h2>${weekChart()}</div>
+    ${store ? '' : '<div class="note">このウィンドウでは 記録が 残らない設定みたい。ふつうのウィンドウで 開いてみてね。</div>'}
+    <footer><a href="#parent">保護者のかたへ</a></footer>`;
+  const hb = $('#heroBtn'); if (hb) hb.onclick = () => go(sp(next).placed ? 'learn/' + enc(next) : 'check/' + enc(next));
+  app.querySelectorAll('[data-check]').forEach(b => b.onclick = () => { state.check = null; save(); go('check/' + enc(b.dataset.check)); });
+}
+
+/* =====================================================================
+   画面：レベルチェック
+   ===================================================================== */
+function checkNext(c, passed){
+  if (passed){ c.lo = Math.max(c.lo, c.cur); c.streak++; } else { c.hi = Math.min(c.hi, c.cur); c.streak = 0; }
+  if (c.lo + 1 >= c.hi) return null;
+  let nxt;
+  if (passed && c.hi >= c.N) nxt = Math.min(c.N - 1, c.cur + c.streak + 1);     // 正解が続くと 飛ばす
+  else nxt = Math.floor((c.lo + c.hi) / 2);                                       // まちがえたら 下に戻って はさみうち
+  if (nxt <= c.lo) nxt = c.lo + 1;
+  return nxt;
+}
+function renderCheck(subj){
+  if (!availableSubjects().includes(subj)) return go('home');
+  const lad = ladder(subj);
+  let c = state.check;
+  if (!c || c.subj !== subj){ c = state.check = { subj, N: lad.length, lo: -1, hi: lad.length, cur: 0, streak: 0, rc: 0, wc: 0 }; save(); }
+  app.innerHTML = `<div class="topbar"><button class="btn ghost small" id="back">← ホーム</button><span class="chip">レベルチェック・${esc(subj)}</span></div>
+    <p class="sub mini">いまの自分に ちょうどいい スタート地点を さがすよ。答えを見て たしかめるだけでも OK！</p>
+    <div class="card" id="qhost"></div>`;
+  $('#back').onclick = () => { go('home'); };
+  const recent = [];
+  function ask(){
+    const q = buildQ(subj, lad[c.cur], newSeed(), recent);
+    if (q.ref.qid){ recent.push(q.ref.qid); if (recent.length > 3) recent.shift(); }
+    mountQuestion($('#qhost'), q, {
+      onAnswer: correct => { noteAnswer(); if (correct) c.rc++; else c.wc++; save(); },
+      onNext: () => {
+        if (c.rc >= 2 || c.wc >= 2){
+          const nxt = checkNext(c, c.rc >= 2);
+          if (nxt === null) return finishCheck();
+          c.cur = nxt; c.rc = 0; c.wc = 0; save();
+        }
+        ask();
+      }
+    });
+  }
+  function finishCheck(){
+    const idx = Math.max(0, c.lo), pr = sp(subj), all = c.lo >= c.N - 1;
+    pr.placed = true; pr.level = lad[idx]; pr.max = Math.max(pr.max, lad[idx]); if (all) pr.clear = true;
+    state.check = null; save(); offKey();
+    const t = ensureToday(), nextS = t.plan.find(s => !t.done.includes(s));
+    app.innerHTML = `<div class="card center"><div class="big" style="font-size:3rem">★</div><h2>スタート地点が 決まったよ！</h2>
+      ${all ? `<p>${esc(subj)} は ぜんぶの ステップを クリア！ ここからは 力だめを たのしもう。</p>`
+            : `<p>${esc(subj)} は「レベル ${idx + 1}：${esc(levelName(subj, lad[idx]))}」から はじめよう。</p><p>★ ${idx} こ ぶんは もうクリア！ ここから 1ステップずつ 進もう。</p>`}
+      <div class="actions"><button class="btn" id="toHome">ホームへ</button>${nextS && sp(nextS).placed ? `<button class="btn primary" id="toLearn">今日の1ステップへ（${esc(nextS)}）</button>` : ''}</div></div>`;
+    $('#toHome').onclick = () => go('home');
+    const tl = $('#toLearn'); if (tl) tl.onclick = () => go('learn/' + enc(nextS));
+  }
+  ask();
+}
+
+/* =====================================================================
+   画面：毎日の学習（15分）
+   ===================================================================== */
+function commitTime(){
+  if (!sess) return;
+  const dlt = sess.elapsed - sess.committed; if (dlt <= 0) return;
+  const t = ensureToday(); t.spent[sess.subj] = sess.elapsed; dayLog().ms += dlt; sess.committed = sess.elapsed;
+}
+function pickNext(){
+  const subj = sess.subj, pr = sp(subj), lad = ladder(subj);
+  if (sess.revCount < 6){
+    const due = dueReviews(subj).filter(r => !sess.revIds.has(r.id));
+    for (const it of due){
+      sess.revIds.add(it.id);
+      const q = buildFromReview(it);
+      if (!q){ state.reviews = state.reviews.filter(r => r.id !== it.id); continue; }
+      sess.revCount++; return { type: 'review', item: it, q };
+    }
+  }
+  const idx = idxOf(lad, pr.level); let level = pr.level, mix = false;
+  if (pr.clear) level = pick(lad);
+  else if (sess.newCount % 4 === 3 && idx > 0){ level = lad[idx - 1]; mix = true; }
+  sess.newCount++;
+  const q = buildQ(subj, level, newSeed(), sess.recent);
+  if (q.ref.qid){ sess.recent.push(q.ref.qid); if (sess.recent.length > 4) sess.recent.shift(); }
+  return { type: 'new', q, mix };
+}
+function evalWindow(){
+  const pr = sp(sess.subj), lad = ladder(sess.subj), w = sess.win, idx = idxOf(lad, pr.level);
+  const s5 = sum(w.slice(-5)), s4 = sum(w.slice(-4));
+  if (w.length >= 5 && s5 >= 4){
+    sess.win = [];
+    if (idx < lad.length - 1){ pr.level = lad[idx + 1]; pr.max = Math.max(pr.max, pr.level); sess.note = `レベルアップ！ ★ 次のステップ「${levelName(sess.subj, pr.level)}」に 進むよ`; }
+    else { pr.clear = true; sess.note = 'ぜんぶの ステップを クリア！ すごい！ ★'; }
+  } else if (w.length >= 4 && s4 <= 1 && idx > 0){
+    sess.win = []; pr.level = lad[idx - 1];
+    sess.note = 'ひとつ前の ステップで ウォーミングアップしよう。ここから また登っていけるよ';
+  }
+  if (sess.win.length > 8) sess.win = sess.win.slice(-8);
+}
+function renderLearn(subj){
+  const t = ensureToday();
+  if (!subj || !availableSubjects().includes(subj)) return go('home');
+  if (!sp(subj).placed) return go('check/' + enc(subj));
+  if (t.done.includes(subj)) return go('home');
+  const budget = state.settings.minutes * 60000, el0 = t.spent[subj] || 0;
+  sess = { subj, budget, elapsed: el0, committed: el0, last: Date.now(), newCount: 0, win: [], note: null, revIds: new Set(), revCount: 0, recent: [], corr: 0, ended: false, timer: null };
+  app.innerHTML = `<div class="topbar"><button class="btn ghost small" id="quit">ここまでにする</button><span class="chip">${esc(subj)}</span></div>
+    <div class="timer"><div class="tbar"><i id="tfill"></i></div><span id="ttext" class="mini sub"></span></div>
+    <div id="notehost"></div><div class="card" id="qhost"></div>`;
+  $('#quit').onclick = () => { cleanup(); go('home'); };
+  const tick = () => {
+    if (sess.ended) return;
+    const now = Date.now(), dt = Math.min(now - sess.last, 2000); sess.last = now;
+    if (!document.hidden) sess.elapsed += dt;
+    const rem = Math.max(0, sess.budget - sess.elapsed);
+    $('#tfill').style.width = Math.min(100, sess.elapsed / sess.budget * 100) + '%';
+    $('#ttext').textContent = rem <= 120000 ? 'あと少し！' : `あと ${Math.ceil(rem / 60000)} 分`;
+    if (sess.elapsed >= sess.budget) endSession(true);
+  };
+  sess.timer = setInterval(tick, 500); tick();
+  nextLearnQ();
+}
+function nextLearnQ(){
+  if (!sess || sess.ended) return;
+  const pk = pickNext();
+  const nh = $('#notehost'); nh.innerHTML = sess.note ? `<div class="note">${esc(sess.note)}</div>` : ''; sess.note = null;
+  mountQuestion($('#qhost'), pk.q, {
+    tag: pk.type === 'review' ? 'ふくしゅう（前に出会った問題）' : '',
+    canRetry: pk.type === 'new' && (pk.q.ref.subj === '算数' || (state.bank[pk.q.ref.subj] || []).filter(x => x.level === pk.q.level).length > 1),
+    onAnswer: (correct) => {
+      noteAnswer();
+      sess.corr = correct ? sess.corr + 1 : 0;
+      if (pk.type === 'review') reviewResult(pk.item, correct);
+      else { if (!correct) addReview(pk.q); if (!pk.mix){ sess.win.push(correct ? 1 : 0); evalWindow(); } }
+      commitTime(); save();
+    },
+    praise: () => sess.corr >= 3 ? `${sess.corr}問 れんぞく せいかい！` : pick(PRAISE),
+    onNext: nextLearnQ,
+    onRetry: () => {
+      const q2 = buildQ(sess.subj, pk.q.level, newSeed(), sess.recent);
+      mountQuestion($('#qhost'), q2, {
+        tag: 'もう一回', canRetry: false,
+        onAnswer: correct => { noteAnswer(); sess.corr = correct ? sess.corr + 1 : 0; commitTime(); save(); },
+        praise: () => 'もう一回で ばっちり！', onNext: nextLearnQ
+      });
+    }
+  });
+}
+function endSession(finished){
+  if (!sess || sess.ended) return;
+  sess.ended = true; clearInterval(sess.timer); commitTime(); offKey();
+  const t = ensureToday();
+  if (finished){ if (!t.done.includes(sess.subj)) t.done.push(sess.subj); touchStreak(); }
+  save();
+  const nextS = t.plan.find(s => !t.done.includes(s));
+  app.innerHTML = `<div class="card center"><div style="font-size:3rem">★</div><h2>時間だよ！ ${esc(sess.subj)}、おつかれさま</h2>
+    <p>今日の1ステップ：${t.done.length} / ${t.plan.length} 教科 おわり</p>
+    ${nextS ? `<p class="sub">少し休んでから 次に行ってもいいよ。</p>` : '<p>今日の1ステップは ぜんぶ おわり！ えらい！</p>'}
+    <div class="actions"><button class="btn" id="toHome">ホームへ</button>${nextS ? `<button class="btn primary" id="toNext">${sp(nextS).placed ? `つぎは ${esc(nextS)}` : `${esc(nextS)} の レベルチェックへ`}</button>` : ''}</div></div>`;
+  $('#toHome').onclick = () => go('home');
+  const tn = $('#toNext'); if (tn) tn.onclick = () => go((sp(nextS).placed ? 'learn/' : 'check/') + enc(nextS));
+}
+
+/* =====================================================================
+   画面：保護者（パスワードなし）
+   ===================================================================== */
+function bankSummary(){
+  const subs = Object.keys(state.bank).filter(s => state.bank[s].length);
+  if (!subs.length) return '<p class="sub mini">まだ 追加された問題は ありません（算数は 自動で作られます）。</p>';
+  return `<ul class="list">${subs.map(s => {
+    const lv = {}; state.bank[s].forEach(q => lv[q.level] = (lv[q.level] || 0) + 1);
+    return `<li><b>${esc(s)}</b><span class="sub mini">${state.bank[s].length}問（${Object.keys(lv).sort((a, b) => a - b).map(k => `レベル${k}:${lv[k]}`).join(' ')}）</span><span style="flex:1"></span><button class="btn small ghost" data-delbank="${esc(s)}">削除</button></li>`;
+  }).join('')}</ul>`;
+}
+function importBank(arr){
+  const res = { added: 0, dup: 0, errors: [] };
+  if (!Array.isArray(arr)){ res.errors.push('ファイルの中身が「問題のリスト」の形に なっていません。'); return res; }
+  arr.forEach((o, i) => {
+    const n = i + 1; if (!o || typeof o !== 'object'){ res.errors.push(`${n}番目：形が 正しくありません`); return; }
+    const subj = String(o['教科'] == null ? '' : o['教科']).trim(), lv = Number(o['レベル']), text = String(o['問題文'] == null ? '' : o['問題文']).trim();
+    const ex = String(o['解説'] == null ? '' : o['解説']).trim(), ch = o['選択肢'], ans = o['正解'];
+    if (!subj){ res.errors.push(`${n}番目：「教科」が ありません`); return; }
+    if (subj === '算数'){ res.errors.push(`${n}番目：算数は 自動で作られるので ここでは使いません`); return; }
+    if (!Number.isInteger(lv) || lv < 1 || lv > 99){ res.errors.push(`${n}番目：「レベル」は 1〜99 の整数にしてください`); return; }
+    if (!text){ res.errors.push(`${n}番目：「問題文」が ありません`); return; }
+    let choices = null, answer;
+    if (ch !== undefined && ch !== null){
+      if (!Array.isArray(ch) || ch.length < 2 || ch.some(x => String(x).trim() === '') || new Set(ch.map(String)).size !== ch.length){ res.errors.push(`${n}番目：「選択肢」は 2つ以上の ちがう言葉の リストにしてください`); return; }
+      choices = ch.map(String); answer = String(ans);
+      if (!choices.includes(answer)){ res.errors.push(`${n}番目：「正解」が 選択肢の中に ありません`); return; }
+    } else {
+      const s = String(ans == null ? '' : ans).trim().replace(/[−ー－]/g, '-');
+      if (s === '' || !isFinite(Number(s))){ res.errors.push(`${n}番目：選択肢が ないときは「正解」を 数字にしてください`); return; }
+      answer = Number(s);
+    }
+    const id = hashStr(subj + '|' + lv + '|' + text);
+    const list = state.bank[subj] || (state.bank[subj] = []);
+    if (list.some(x => x.id === id)){ res.dup++; return; }
+    list.push({ id, subj, level: lv, text, choices, answer, explain: ex }); res.added++;
+  });
+  return res;
+}
+function download(name, text, type){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type || 'application/json' })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const TEMPLATE = [
+  { '教科': '国語', 'レベル': 1, '問題文': '「大きい」の 反対の意味の 言葉は？', '選択肢': ['小さい', '長い', '広い', '重い'], '正解': '小さい', '解説': '「大きい」の 反対は「小さい」だよ。' },
+  { '教科': '理科', 'レベル': 1, '問題文': '水は ふつう 何℃ で こおる？（数字で 答えてね）', '正解': '0', '解説': '水は 0℃ で こおって 氷になるよ。' }
+];
+
+function renderParent(){
+  const t = ensureToday(), av = availableSubjects();
+  const todayK = dayKey(); const upcoming = [];
+  for (let i = 0; i < 7; i++){ const k = addDays(todayK, i); upcoming.push(state.reviews.filter(r => i === 0 ? r.due <= k : r.due === k).length); }
+  const subjBlocks = av.map(s => {
+    const pr = sp(s), l = ladder(s), clr = clearedCount(s);
+    return `<div class="card"><div class="row between"><h2 style="margin:0">${esc(s)}</h2><span class="star">★ ${clr} / ${l.length}</span></div>
+      ${pr.placed ? `<p class="mini">いま練習しているステップ：レベル ${idxOf(l, pr.level) + 1}　${esc(levelName(s, pr.level))}</p>${stepsBar(s)}` : '<p class="mini sub">レベルチェックは これからです。</p>'}
+      <details><summary class="mini sub">ステップの一覧を見る</summary><ul class="list mini">${l.map((lv, i) => `<li class="${pr.placed && i === idxOf(l, pr.level) && !pr.clear ? 'cur' : ''}"><span class="star">${i < clr ? '★' : '☆'}</span> レベル ${i + 1}　${esc(levelName(s, lv))}</li>`).join('')}</ul></details></div>`;
+  }).join('');
+  app.innerHTML = `
+    <div class="topbar"><h1 style="margin:0">保護者のかたへ</h1><a class="btn small" href="#home">こどもの画面へ</a></div>
+    <p class="sub mini">ここでは 進み具合だけを 表示します。</p>
+    <div class="card"><h2>取り組みの様子</h2>
+      <div class="stat"><div><b>${currentStreak()}</b>れんぞく 日</div><div><b>${state.streak.total}</b>学習した 日数</div><div><b>${weekMinutes()}</b>今週の 分</div></div>
+      <p class="mini sub">今日：${t.plan.map(s => esc(s) + (t.done.includes(s) ? '（おわり）' : '')).join(' → ') || '—'}</p>
+      ${weekChart()}</div>
+    ${subjBlocks}
+    <div class="card"><h2>ふくしゅうの予定</h2>
+      <p class="mini sub">一度 出会った問題を 1日後・3日後・7日後・14日後に 自動で もう一度 出します。</p>
+      <div class="chart" style="height:90px">${upcoming.map((n, i) => `<div class="col ${i === 0 ? 'today' : ''}"><div class="v">${n || ''}</div><div class="b" style="height:${Math.max(4, Math.min(100, n * 12))}%"></div><div>${i === 0 ? '今日' : WD[parseKey(addDays(todayK, i)).getDay()]}</div></div>`).join('')}</div></div>
+    <div class="card"><h2>問題を追加する（算数以外）</h2>
+      <p class="mini sub">JSONファイルを選ぶと 問題が 増えます。教科は 5つまで 自由に 作れます。レベルは 1 から 順に つけてください。</p>
+      <div class="row"><input type="file" id="bankFile" accept=".json,application/json" multiple><button class="btn small" id="tplBtn">ひな形を ダウンロード</button></div>
+      <div id="importMsg" class="mini" style="margin-top:8px"></div>
+      <h3>いま入っている問題</h3><div id="bankSum">${bankSummary()}</div>
+      <details><summary class="mini sub">ファイルの書き方</summary><pre>[
+  { "教科": "国語", "レベル": 1,
+    "問題文": "「大きい」の反対の意味の言葉は？",
+    "選択肢": ["小さい","長い","広い","重い"],
+    "正解": "小さい",
+    "解説": "「大きい」の反対は「小さい」だよ。" },
+  { "教科": "理科", "レベル": 1,
+    "問題文": "水はふつう何℃でこおる？（数字で）",
+    "正解": "0",
+    "解説": "水は0℃でこおるよ。" }
+]</pre><p class="mini sub">・選択肢があるとき：正解は 選択肢と 同じ文字にします。<br>・選択肢がないとき：正解は 数字にします（短い数字入力になります）。<br>・分数は {3/7} や {1 2/5} と書くと 分数の形で 表示されます。</p></details></div>
+    <div class="card"><h2>記録の保存・移行</h2>
+      <p class="mini sub">記録は この端末・このブラウザの中に 保存されます。別の端末で 使うときは 保存ファイルを 持っていってください。</p>
+      <div class="row"><button class="btn small" id="expBtn">記録を 保存（ダウンロード）</button><label class="btn small ghost" for="impFile">記録を 読み込む</label><input type="file" id="impFile" accept=".json,application/json" style="display:none"></div>
+      <div id="dataMsg" class="mini" style="margin-top:8px"></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+      <button class="btn small ghost" id="resetBtn">すべての記録を 消す</button></div>
+    <footer class="mini sub">ステップ学習 v1.0</footer>`;
+
+  $('#tplBtn').onclick = () => download('questions-template.json', JSON.stringify(TEMPLATE, null, 2));
+  $('#bankFile').onchange = async e => {
+    const msgs = []; let added = 0;
+    for (const f of e.target.files){
+      try { const r = importBank(JSON.parse(await f.text())); added += r.added;
+        msgs.push(`<b>${esc(f.name)}</b>：${r.added} 問 追加${r.dup ? `、${r.dup} 問は すでにあるので スキップ` : ''}${r.errors.length ? `<br>読み込めなかった問題：<br>${r.errors.slice(0, 8).map(esc).join('<br>')}${r.errors.length > 8 ? '<br>…ほか' : ''}` : ''}`);
+      } catch (err){ msgs.push(`<b>${esc(f.name)}</b>：JSONの形式を 読み取れませんでした`); }
+    }
+    if (added && !(state.today && state.today.done.length)) state.today = null;   // 今日まだ何も終わっていなければ 教科の組み合わせを作り直す
+    save(); $('#importMsg').innerHTML = msgs.join('<br>'); $('#bankSum').innerHTML = bankSummary(); bindDel(); e.target.value = '';
+  };
+  function bindDel(){ app.querySelectorAll('[data-delbank]').forEach(b => b.onclick = () => {
+    const s = b.dataset.delbank; if (!confirm(`「${s}」の問題を ぜんぶ 削除しますか？（進み具合の記録は 残ります）`)) return;
+    delete state.bank[s]; state.reviews = state.reviews.filter(r => r.subj !== s); state.today = null; save(); renderParent();
+  }); }
+  bindDel();
+  $('#expBtn').onclick = () => download(`step-study-backup-${dayKey()}.json`, JSON.stringify(state));
+  $('#impFile').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const o = JSON.parse(await f.text()); if (!o || o.v !== 1 || typeof o.subjects !== 'object') throw 0;
+      if (!confirm('いまの記録を この保存ファイルの内容に 置きかえます。よろしいですか？')) return;
+      state = Object.assign(freshState(), o); save(); renderParent(); $('#dataMsg').textContent = '読み込みました。';
+    } catch (err){ $('#dataMsg').textContent = '保存ファイルとして 読み取れませんでした。'; }
+    e.target.value = '';
+  };
+  $('#resetBtn').onclick = () => {
+    if (!confirm('すべての記録（進み具合・ふくしゅう・追加した問題）を 消します。元に戻せません。')) return;
+    const w = prompt('本当に消すときは「けす」と入力してください'); if (w !== 'けす') return;
+    state = freshState(); save(); go('home');
+  };
+}
+
+/* =====================================================================
+   ルーター
+   ===================================================================== */
+function route(){
+  cleanup();
+  const h = location.hash.replace(/^#/, ''), [name, arg] = h.split('/');
+  window.scrollTo(0, 0);
+  switch (name){
+    case 'parent': return renderParent();
+    case 'check': return renderCheck(decodeURIComponent(arg || '算数'));
+    case 'learn': return renderLearn(decodeURIComponent(arg || ''));
+    default: return renderHome();
+  }
+}
+window.addEventListener('hashchange', route);
+window.addEventListener('pagehide', () => { if (sess && !sess.ended){ commitTime(); } save(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && sess && !sess.ended){ commitTime(); save(); } else if (sess) sess.last = Date.now(); });
+window.StepApp = { state: () => state, curQ: () => curQ, sess: () => sess, MATH, buildMath, buildQ, importBank, checkNext, ladder, route, go, addReview, reviewResult, dueReviews, dayKey, addDays, ensureToday, currentStreak };
+route();
+</script>
+</body>
+</html>
