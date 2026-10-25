@@ -868,7 +868,11 @@ function renderParent(){
       <div id="dataMsg" class="mini" style="margin-top:8px"></div>
       <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
       <button class="btn small ghost" id="resetBtn">すべての記録を 消す</button></div>
+    <div class="card"><h2>アプリの更新</h2>
+      <p class="mini sub">アプリが 新しくなったのに 変わらないときに 押してください。記録は 消えません。</p>
+      <button class="btn small" id="updBtn">最新の状態にする</button></div>
     <footer class="mini sub">ステップ学習 v1.0</footer>`;
+  $('#updBtn').onclick = () => { location.href = location.pathname + '?v=' + Date.now() + '#home'; };
 
   $('#tplBtn').onclick = () => download('questions-template.json', JSON.stringify(TEMPLATE, null, 2));
   $('#bankFile').onchange = async e => {
@@ -891,7 +895,7 @@ function renderParent(){
     const f = e.target.files[0]; if (!f) return;
     try { const o = JSON.parse(await f.text()); if (!o || o.v !== 1 || typeof o.subjects !== 'object') throw 0;
       if (!confirm('いまの記録を この保存ファイルの内容に 置きかえます。よろしいですか？')) return;
-      state = Object.assign(freshState(), o); save(); renderParent(); $('#dataMsg').textContent = '読み込みました。';
+      state = Object.assign(freshState(), o); save(); renderParent(); $('#dataMsg').textContent = '読み込みました。'; autoLoadBank();
     } catch (err){ $('#dataMsg').textContent = '保存ファイルとして 読み取れませんでした。'; }
     e.target.value = '';
   };
@@ -922,8 +926,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && ses
 window.StepApp = { state: () => state, curQ: () => curQ, sess: () => sess, MATH, buildMath, buildQ, importBank, checkNext, ladder, route, go, addReview, reviewResult, dueReviews, dayKey, addDays, ensureToday, currentStreak, autoLoadBank };
 
 /* 同じフォルダに置いた問題ファイルを、開くたびに自動で読み込む（Webで公開しているとき）
-   教科を増やすときは、ここにファイル名を足す。すでに入っている問題は自動でスキップされる */
-const AUTO_QUESTION_FILES = ['english-questions.json'];
+   english / social / japanese / science の名前で置けば、コードを変えなくても自動で入る。すでに入っている問題は自動でスキップされる */
+const AUTO_QUESTION_FILES = ['english-questions.json', 'social-questions.json', 'japanese-questions.json', 'science-questions.json'];
 async function autoLoadBank(){
   if (typeof fetch !== 'function' || !/^https?:$/.test(location.protocol)) return;
   let added = 0;
