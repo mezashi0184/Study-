@@ -919,7 +919,28 @@ function route(){
 window.addEventListener('hashchange', route);
 window.addEventListener('pagehide', () => { if (sess && !sess.ended){ commitTime(); } save(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && sess && !sess.ended){ commitTime(); save(); } else if (sess) sess.last = Date.now(); });
-window.StepApp = { state: () => state, curQ: () => curQ, sess: () => sess, MATH, buildMath, buildQ, importBank, checkNext, ladder, route, go, addReview, reviewResult, dueReviews, dayKey, addDays, ensureToday, currentStreak };
+window.StepApp = { state: () => state, curQ: () => curQ, sess: () => sess, MATH, buildMath, buildQ, importBank, checkNext, ladder, route, go, addReview, reviewResult, dueReviews, dayKey, addDays, ensureToday, currentStreak, autoLoadBank };
+
+/* 同じフォルダに置いた問題ファイルを、開くたびに自動で読み込む（Webで公開しているとき）
+   教科を増やすときは、ここにファイル名を足す。すでに入っている問題は自動でスキップされる */
+const AUTO_QUESTION_FILES = ['english-questions.json'];
+async function autoLoadBank(){
+  if (typeof fetch !== 'function' || !/^https?:$/.test(location.protocol)) return;
+  let added = 0;
+  for (const name of AUTO_QUESTION_FILES){
+    try {
+      const res = await fetch(name, { cache: 'no-cache' });
+      if (!res.ok) continue;
+      added += importBank(await res.json()).added;
+    } catch (e) {}
+  }
+  if (!added) return;
+  if (!(state.today && state.today.done.length)) state.today = null;   // 今日まだ何も終わっていなければ 教科の組み合わせを作り直す
+  save();
+  const h = location.hash.replace(/^#/, '');
+  if (h === '' || h === 'home') route();
+}
+autoLoadBank();
 route();
 </script>
 </body>
