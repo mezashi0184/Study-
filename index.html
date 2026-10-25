@@ -606,7 +606,7 @@ function renderHome(){
       <div class="row" style="margin-top:8px"><button class="btn small" data-check="${esc(s)}">${pr.placed ? 'もう一度 レベルチェック' : 'レベルチェックをする'}</button></div></div>`;
   }).join('');
   app.innerHTML = `
-    <h1>${greet}！</h1><p class="sub" style="margin-top:0">きょうも 1ステップずつ いこう。</p>
+    <h1>${greet}、美里ちゃん！</h1><p class="sub" style="margin-top:0">きょうも 1ステップずつ いこう。</p>
     <div class="card hero">
       <div class="stat"><div><b>${streak}</b>れんぞく 日</div><div><b>${state.streak.total}</b>ぜんぶで 日</div><div><b>${weekMinutes()}</b>今週の 分</div></div>
       <div style="margin:4px 0 10px">今日の1ステップ：${planChips}</div>
