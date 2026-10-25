@@ -385,6 +385,7 @@ function loadState(){
   return freshState();
 }
 let state = loadState();
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}   // 記録が ブラウザに 消されにくくなるよう お願いする
 function save(){ if (!store) return; try { store.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
 const REV = [1, 3, 7, 14];                      // 復習の間隔（最初に出会った日から数えた日数）
@@ -872,7 +873,7 @@ function renderParent(){
       <p class="mini sub">アプリが 新しくなったのに 変わらないときに 押してください。記録は 消えません。</p>
       <button class="btn small" id="updBtn">最新の状態にする</button></div>
     <footer class="mini sub">ステップ学習 v1.0</footer>`;
-  $('#updBtn').onclick = () => { location.href = location.pathname + '?v=' + Date.now() + '#home'; };
+  $('#updBtn').onclick = () => { try { location.hash = 'home'; location.reload(); } catch (e) {} };
 
   $('#tplBtn').onclick = () => download('questions-template.json', JSON.stringify(TEMPLATE, null, 2));
   $('#bankFile').onchange = async e => {
